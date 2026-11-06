@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Справочник форм автомобилей</title>
+<meta name="description" content="Каталог типов кузова автомобилей с поиском, галереей и админ-панелью">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🚗%3C/text%3E%3C/svg%3E">
+<style>
+/* ============ Палитра и переменные ============ */
+:root{
+  --bg:#f4f6fb; --card:#fff; --ink:#151b2c; --muted:#667085; --line:#e4e8f1;
+  --accent:#2f5bea; --accent-2:#6a8dff; --accent-soft:#e9eeff; --accent-ink:#fff;
+  --danger:#d92d20; --danger-soft:#fdecea; --ok:#12b76a; --warn:#f79009;
+  --field:#fff; --thumb:#eef1f8;
+  --radius:16px; --shadow:0 6px 24px rgba(20,30,60,.06); --shadow-lg:0 18px 40px rgba(20,30,60,.14);
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --hero:linear-gradient(135deg,#16206b 0%,#2f5bea 58%,#6a8dff 100%);
+}
+:root[data-theme="dark"]{
+  --bg:#0c111d; --card:#141b2b; --ink:#e8ecf6; --muted:#97a3b9; --line:#242d42;
+  --accent:#6f8dff; --accent-2:#9ab0ff; --accent-soft:#1c2748; --accent-ink:#0c111d;
+  --danger:#ff6b60; --danger-soft:#33191a; --field:#0f1626; --thumb:#101727;
+  --shadow:0 6px 24px rgba(0,0,0,.35); --shadow-lg:0 18px 40px rgba(0,0,0,.5);
+  --hero:linear-gradient(135deg,#0b1240 0%,#1f3aa8 60%,#3f63e0 100%);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1.6;
+  -webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column;transition:background .25s,color .25s}
+h1,h2,h3{line-height:1.2;letter-spacing:-.02em;margin:0}
+a{color:var(--accent)}
+.container{width:100%;max-width:1180px;margin:0 auto;padding:0 20px}
+#app{flex:1;padding-top:28px;padding-bottom:56px;animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ============ Шапка ============ */
+.site-header{position:sticky;top:0;z-index:100;background:color-mix(in srgb,var(--card) 88%,transparent);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.header-inner{display:flex;align-items:center;justify-content:space-between;height:64px;gap:12px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;color:var(--ink);text-decoration:none}
+.logo i{font-style:normal;display:grid;place-items:center;width:36px;height:36px;border-radius:11px;
+  background:var(--hero);color:#fff;font-size:18px;box-shadow:0 6px 16px rgba(47,91,234,.35)}
+.site-header nav{display:flex;gap:6px;align-items:center}
+.site-header nav a{padding:8px 14px;border-radius:10px;text-decoration:none;color:var(--muted);font-weight:600;font-size:14.5px;transition:.15s}
+.site-header nav a:hover,.site-header nav a.active{color:var(--accent);background:var(--accent-soft)}
+.icon-btn{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);
+  cursor:pointer;font-size:17px;display:grid;place-items:center;transition:.15s}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ============ Кнопки, теги ============ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:11px;font-size:14.5px;
+  font-weight:600;text-decoration:none;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);transition:.15s;font-family:inherit}
+.btn:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);box-shadow:0 6px 16px rgba(47,91,234,.28)}
+.btn.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
+.btn.danger{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 35%,var(--line))}
+.btn.danger:hover{background:var(--danger-soft);border-color:var(--danger);color:var(--danger)}
+.btn.sm{padding:6px 11px;font-size:13px;border-radius:9px}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--accent-soft);
+  color:var(--accent);text-transform:uppercase;letter-spacing:.4px}
+
+/* ============ Hero и каталог ============ */
+.hero{background:var(--hero);color:#fff;border-radius:24px;padding:44px 40px;margin-bottom:26px;position:relative;overflow:hidden;box-shadow:var(--shadow-lg)}
+.hero::after{content:"";position:absolute;right:-80px;top:-80px;width:340px;height:340px;border-radius:50%;background:rgba(255,255,255,.08)}
+.hero::before{content:"";position:absolute;right:120px;bottom:-140px;width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,.06)}
+.hero h1{font-size:clamp(26px,4vw,42px);max-width:640px;position:relative}
+.hero p{margin:12px 0 0;max-width:560px;color:#dfe6ff;font-size:clamp(15px,1.5vw,18px);position:relative}
+.hero-stats{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px;position:relative}
+.hero-stats span{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.26);padding:6px 14px;border-radius:999px;font-size:13.5px;font-weight:600}
+
+.toolbar{display:flex;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+.toolbar input,.toolbar select,.field input,.field select,.field textarea{
+  font:inherit;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:12px;padding:11px 14px;transition:.15s;outline:none}
+.toolbar input{flex:1;min-width:220px}
+.toolbar input:focus,.toolbar select:focus,.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.result-info{color:var(--muted);font-size:14px;margin:-6px 0 16px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:22px}
+.card{display:flex;flex-direction:column;background:var(--card);border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);
+  box-shadow:var(--shadow);text-decoration:none;color:inherit;transition:.25s}
+.card:hover{transform:translateY(-5px);box-shadow:var(--shadow-lg);border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+.card-img{aspect-ratio:16/10;background:var(--thumb);overflow:hidden}
+.card-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s}
+.card:hover .card-img img{transform:scale(1.06)}
+.card-body{padding:18px 20px 16px;display:flex;flex-direction:column;gap:8px;flex:1}
+.card-body h3{font-size:19px;margin-top:2px}
+.card-body p{margin:0;color:var(--muted);font-size:14.5px;flex:1}
+.card-foot{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);padding-top:12px;border-top:1px dashed var(--line);margin-top:6px}
+.card-foot .more{color:var(--accent);font-weight:700}
+
+.pagination{display:flex;justify-content:center;gap:6px;margin-top:34px;flex-wrap:wrap}
+.pg{min-width:40px;height:40px;border-radius:11px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-weight:600;cursor:pointer;transition:.15s}
+.pg:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.pg.active{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.pg:disabled{opacity:.4;cursor:not-allowed}
+.pg-dots{align-self:center;color:var(--muted);padding:0 4px}
+
+.empty{text-align:center;padding:60px 20px;background:var(--card);border:1px dashed var(--line);border-radius:var(--radius);color:var(--muted)}
+.empty h2{color:var(--ink);margin-bottom:6px}
+
+/* ============ Страница записи ============ */
+.back-link{display:inline-flex;gap:6px;margin-bottom:18px;color:var(--muted);text-decoration:none;font-weight:600}
+.back-link:hover{color:var(--accent)}
+.form-view-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:34px;align-items:start}
+.gallery .main-img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:20px;border:1px solid var(--line);box-shadow:var(--shadow-lg);background:var(--thumb);display:block}
+.thumbs{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.thumb{width:86px;aspect-ratio:16/10;padding:0;border-radius:11px;overflow:hidden;border:2px solid transparent;background:var(--thumb);cursor:pointer;opacity:.65;transition:.15s}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb:hover{opacity:1}
+.thumb.active{border-color:var(--accent);opacity:1}
+.form-info h1{font-size:clamp(28px,3.4vw,40px);margin:12px 0 8px}
+.lead{font-size:18px;color:var(--muted);margin:0 0 18px}
+.form-stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.form-stats span{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 13px;font-size:13.5px;color:var(--muted)}
+.desc{white-space:pre-line;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow)}
+
+/* ============ Авторизация ============ */
+.auth-wrap{display:grid;place-items:center;min-height:55vh}
+.auth-card{width:100%;max-width:400px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:34px 30px;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;gap:16px}
+.auth-card .lock{width:54px;height:54px;border-radius:16px;background:var(--hero);display:grid;place-items:center;font-size:26px;margin-bottom:-4px}
+.hint{margin:0;color:var(--muted);font-size:14px}
+.err{margin:0;color:var(--danger);font-weight:600;min-height:1.2em;font-size:14px}
+
+/* ============ Админка ============ */
+.admin-layout{display:grid;grid-template-columns:220px 1fr;gap:28px;align-items:start}
+.admin-nav{position:sticky;top:90px;display:flex;flex-direction:column;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:10px;box-shadow:var(--shadow)}
+.admin-nav a{padding:10px 14px;border-radius:10px;text-decoration:none;color:var(--muted);font-weight:600;font-size:14.5px;transition:.15s;white-space:nowrap}
+.admin-nav a:hover{background:var(--accent-soft);color:var(--accent)}
+.admin-nav a.active{background:var(--accent);color:var(--accent-ink)}
+.admin-nav a.logout{color:var(--danger);margin-top:6px;border-top:1px solid var(--line);border-radius:0 0 10px 10px}
+.admin-content{min-width:0}
+.admin-content>h1,.row-head h1{font-size:28px;margin-bottom:18px}
+.admin-content h2{font-size:19px;margin:30px 0 14px}
+.row-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.row-head h1{margin:0}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
+.stat-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.stat-card::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--hero)}
+.stat-card .k{color:var(--muted);font-size:13.5px;font-weight:600}
+.stat-card .v{font-size:34px;font-weight:800;letter-spacing:-.03em;margin-top:2px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+
+.table-wrap{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow-x:auto;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th{text-align:left;padding:12px 16px;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);background:color-mix(in srgb,var(--thumb) 60%,var(--card));border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tbody tr:hover{background:color-mix(in srgb,var(--accent-soft) 45%,transparent)}
+td img.mini{width:64px;aspect-ratio:16/10;object-fit:cover;border-radius:8px;display:block;background:var(--thumb)}
+td.act{white-space:nowrap}
+
+.form-grid{display:flex;flex-direction:column;gap:18px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:26px;box-shadow:var(--shadow)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:13.5px;font-weight:700}
+.field textarea{resize:vertical;min-height:80px}
+.field .invalid,.field input.invalid{border-color:var(--danger);box-shadow:0 0 0 4px var(--danger-soft)}
+.field .msg{color:var(--danger);font-size:13px;font-weight:600;min-height:0}
+.field small{color:var(--muted)}
+.field input[type=file]{padding:9px}
+.previews{display:flex;gap:12px;flex-wrap:wrap}
+.img-prev{position:relative;width:130px;aspect-ratio:16/10;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:var(--thumb)}
+.img-prev img{width:100%;height:100%;object-fit:cover;display:block}
+.img-prev .x{position:absolute;top:5px;right:5px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.65);color:#fff;cursor:pointer;font-size:16px;line-height:1}
+.img-prev .x:hover{background:var(--danger)}
+.form-actions{display:flex;gap:10px;margin-top:4px}
+.cat-add{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.cat-add input{flex:1;min-width:200px;font:inherit;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:12px;padding:11px 14px;outline:none}
+.cat-add input:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+
+/* ============ Подвал и тосты ============ */
+.site-footer{border-top:1px solid var(--line);background:var(--card);padding:22px 0;color:var(--muted);font-size:14px;text-align:center}
+.site-footer p{margin:0}
+.toast{position:fixed;right:20px;bottom:20px;z-index:999;background:var(--ink);color:var(--bg);padding:13px 18px;border-radius:12px;font-weight:600;font-size:14.5px;
+  box-shadow:var(--shadow-lg);opacity:0;transform:translateY(14px);transition:.3s;max-width:calc(100vw - 40px);border-left:5px solid var(--accent)}
+.toast.show{opacity:1;transform:none}
+.toast.success{border-left-color:var(--ok)}
+.toast.error{border-left-color:var(--danger)}
+
+/* ============ Адаптив ============ */
+@media (max-width:900px){
+  .form-view-grid,.admin-layout{grid-template-columns:1fr}
+  .admin-nav{position:static;flex-direction:row;overflow-x:auto}
+  .admin-nav a.logout{margin:0;border:0;border-radius:10px}
+  .hero{padding:32px 24px}
+}
+@media (max-width:560px){
+  .toolbar{flex-direction:column}
+  .toolbar input,.toolbar select{width:100%}
+  .site-header nav a{padding:8px 10px;font-size:13.5px}
+  .logo span{display:none}
+  .form-grid{padding:18px}
+  .toast{left:20px;right:20px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="#/" class="logo"><i>🚗</i> <span>Формы авто</span></a>
+    <nav>
+      <a href="#/" id="nav-home">Каталог</a>
+      <a href="#/admin" id="nav-admin">Админ-панель</a>
+      <button class="icon-btn" id="themeBtn" type="button" title="Сменить тему" aria-label="Сменить тему">🌙</button>
+    </nav>
+  </div>
+</header>
+
+<main id="app" class="container">
+  <div class="empty"><h2>Загрузка…</h2></div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>Учебный проект · HTML / CSS / JS · данные хранятся в localStorage</p>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   Шаг 4. Константы и утилиты
+   ============================================================ */
+const K = {
+  forms: 'cf_forms',
+  cats: 'cf_categories',
+  nextId: 'cf_nextId',
+  admin: 'cf_admin',
+  initialized: 'cf_initialized',
+  theme: 'cf_theme'
+};
+const ADMIN_DEFAULT = { login: 'admin', password: 'admin123' };
+const PER_PAGE = 6;
+const MAX_FILE = 500 * 1024;
+const app = document.getElementById('app');
+
+/* Экранирование: защита от XSS */
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+/* Безопасная вставка src: допускаем только data:image/ и http(s) */
+function safeSrc(src) {
+  return /^(data:image\/(jpeg|png|webp|svg\+xml)[;,]|https?:\/\/)/i.test(src || '') ? esc(src) : '';
+}
+
+function now() {
+  return new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+/* Тосты */
+function toast(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 2600);
+}
+
+/* Красивая SVG-заглушка: силуэт кузова на градиенте */
+const BODIES = {
+  sedan:  { x0: 125, x1: 690, top: 258, cab: [[262,258],[335,192],[505,192],[590,258]], bed: null },
+  hatch:  { x0: 150, x1: 655, top: 258, cab: [[262,258],[330,190],[540,190],[625,258]], bed: null },
+  wagon:  { x0: 125, x1: 690, top: 258, cab: [[255,258],[325,190],[610,190],[660,258]], bed: null },
+  coupe:  { x0: 125, x1: 690, top: 268, cab: [[300,268],[385,208],[505,208],[610,268]], bed: null },
+  suv:    { x0: 130, x1: 680, top: 250, cab: [[250,250],[298,168],[600,168],[650,250]], bed: null },
+  pickup: { x0: 115, x1: 700, top: 258, cab: [[255,258],[305,182],[445,182],[490,258]], bed: [490,700] }
+};
+function ph(text, color, kind) {
+  color = color || '#2f5bea';
+  const b = BODIES[kind];
+  let car = '';
+  if (b) {
+    const cab = b.cab.map(p => p.join(',')).join(' ');
+    const wheel = x => `<circle cx="${x}" cy="338" r="46" fill="#10151f"/><circle cx="${x}" cy="338" r="24" fill="#cdd5e4"/><circle cx="${x}" cy="338" r="8" fill="#10151f"/>`;
+    const bed = b.bed ? `<rect x="${b.bed[0]}" y="${b.top}" width="${b.bed[1]-b.bed[0]}" height="18" fill="#fff" fill-opacity=".92"/>` : '';
+    const mid = b.cab.length ? (b.cab[1][0] + b.cab[2][0]) / 2 : 400;
+    car = `
+      <ellipse cx="410" cy="388" rx="300" ry="14" fill="#000" fill-opacity=".22"/>
+      <polygon points="${cab}" fill="#fff" fill-opacity=".92" stroke="#fff" stroke-width="6" stroke-linejoin="round"/>
+      <polygon points="${b.cab.map(([x,y],i)=>[x+(i===0?22:i===3?-22:i===1?12:-12), y+(i>0&&i<3?14:-6)].join(',')).join(' ')}" fill="${color}" fill-opacity=".55"/>
+      <line x1="${mid}" y1="${b.cab[1][1]+14}" x2="${mid}" y2="${b.top-6}" stroke="#fff" stroke-width="6" stroke-opacity=".9"/>
+      <rect x="${b.x0}" y="${b.top}" width="${b.x1-b.x0}" height="82" rx="30" fill="#fff"/>
+      ${bed}
+      <rect x="${b.x0+10}" y="${b.top+34}" width="${b.x1-b.x0-20}" height="6" rx="3" fill="${color}" fill-opacity=".25"/>
+      <rect x="${b.x1-26}" y="${b.top+14}" width="22" height="12" rx="6" fill="#ffd75e"/>
+      <rect x="${b.x0+4}" y="${b.top+14}" width="18" height="12" rx="6" fill="#ff6b6b"/>
+      ${wheel(b.x0 + 125)}${wheel(b.x1 - 125)}`;
+  }
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 820 500">
+    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="${color}"/><stop offset="1" stop-color="${color}" stop-opacity=".68"/></linearGradient></defs>
+    <rect width="820" height="500" fill="url(#g)"/>
+    <circle cx="700" cy="90" r="150" fill="#fff" fill-opacity=".08"/>
+    <circle cx="90" cy="440" r="130" fill="#fff" fill-opacity=".07"/>
+    ${car}
+    <text x="410" y="${b ? 455 : 270}" fill="#fff" font-family="Arial,sans-serif" font-size="${b ? 34 : 52}" font-weight="bold" text-anchor="middle">${esc(text)}</text>
+  </svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+/* Хеш пароля: SHA-256, при недоступности crypto.subtle — запасной вариант */
+async function hashPassword(pwd) {
+  try {
+    if (window.crypto && crypto.subtle && crypto.subtle.digest) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
+      return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+  } catch (e) {}
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0; i < pwd.length; i++) {
+    const ch = pwd.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return 'fb' + (h2 >>> 0).toString(16) + (h1 >>> 0).toString(16);
+}
+
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(file);
+  });
+}
+function validateImage(file) {
+  const ok = ['image/jpeg', 'image/png', 'image/webp'];
+  if (!ok.includes(file.type)) return 'Недопустимый формат (нужен JPG, PNG или WEBP).';
+  if (file.size > MAX_FILE) return 'Файл больше 500 КБ.';
+  return null;
+}
+
+/* ============================================================
+   Шаг 5. Хранение данных
+   ============================================================ */
+function getForms() {
+  try { return JSON.parse(localStorage.getItem(K.forms) || '[]'); } catch (e) { return []; }
+}
+function setForms(arr) {
+  try { localStorage.setItem(K.forms, JSON.stringify(arr)); }
+  catch (e) { toast('Превышен лимит хранилища. Удалите часть изображений.', 'error'); throw e; }
+}
+function getCats() {
+  try { return JSON.parse(localStorage.getItem(K.cats) || '[]'); } catch (e) { return []; }
+}
+function setCats(arr) {
+  try { localStorage.setItem(K.cats, JSON.stringify(arr)); }
+  catch (e) { toast('Ошибка сохранения', 'error'); }
+}
+function nextId() {
+  const n = +(localStorage.getItem(K.nextId) || '1');
+  localStorage.setItem(K.nextId, n + 1);
+  return n;
+}
+function isAuthed() { return sessionStorage.getItem(K.admin) === '1'; }
+function requireAuth() {
+  if (!isAuthed()) { location.hash = '#/admin/login'; return false; }
+  return true;
+}
+
+/* ============================================================
+   Шаг 6. Инициализация и демо-данные
+   ============================================================ */
+const SEED = [
+  { title: 'Седан', kind: 'sedan', category: 'Легковые', color: '#2f5bea',
+    short: 'Классический кузов с отдельным багажником',
+    desc: 'Седан — трёхобъёмный кузов: капот, салон и отдельный багажник, отделённый от салона жёсткой перегородкой.\n\nПлюсы: хорошая шумоизоляция салона, высокая жёсткость кузова, привычная и «солидная» посадка.\nМинусы: ограниченная высота и ширина загрузочного проёма багажника.\n\nПримеры: Toyota Camry, Hyundai Sonata, Skoda Octavia (лифтбек), Kia K5.' },
+  { title: 'Хэтчбек', kind: 'hatch', category: 'Легковые', color: '#12b76a',
+    short: 'Компактный кузов с задней дверью-«пятой дверью»',
+    desc: 'Хэтчбек — двухобъёмный кузов с откидной задней дверью, в которую входит и заднее стекло.\n\nПлюсы: компактные размеры, удобство парковки в городе, багажник легко трансформируется складыванием сидений.\nМинусы: больше шума из багажной зоны, чем у седана.\n\nПримеры: Volkswagen Golf, Hyundai i30, Ford Focus, Mazda 3 Hatchback.' },
+  { title: 'Универсал', kind: 'wagon', category: 'Легковые', color: '#f79009',
+    short: 'Вместительный кузов для семьи и путешествий',
+    desc: 'Универсал — удлинённый двухобъёмный кузов с высокой крышей, продолжающейся над багажным отсеком.\n\nПлюсы: самый большой объём багажника среди легковых, при этом управляемость как у седана.\nМинусы: длиннее и тяжелее аналогичного хэтчбека.\n\nПримеры: Volvo V60, Skoda Octavia Combi, Audi A6 Avant, Mercedes E-Class Estate.' },
+  { title: 'Купе', kind: 'coupe', category: 'Легковые', color: '#7a5af8',
+    short: 'Спортивный двухдверный кузов с наклонной крышей',
+    desc: 'Купе — кузов с низкой покатой крышей и, как правило, двумя дверями. Ставка делается на динамичный силуэт.\n\nПлюсы: выразительный дизайн, низкий центр тяжести, хорошая аэродинамика.\nМинусы: ограниченное пространство на заднем ряду и сложный доступ к нему.\n\nПримеры: BMW 4 Series, Audi TT, Ford Mustang, Toyota GR86.' },
+  { title: 'Внедорожник (SUV)', kind: 'suv', category: 'Внедорожники', color: '#d92d20',
+    short: 'Высокий клиренс, полный привод, просторный салон',
+    desc: 'SUV — кузов повышенной проходимости с высоким клиренсом и просторным салоном. Современные кроссоверы строятся на легковой платформе, «настоящие» внедорожники — на рамной.\n\nПлюсы: обзор, проходимость, место для багажа и пассажиров.\nМинусы: выше расход топлива, выше центр тяжести.\n\nПримеры: Toyota Land Cruiser, Land Rover Defender, Kia Sorento, Hyundai Tucson.' },
+  { title: 'Пикап', kind: 'pickup', category: 'Грузовые', color: '#475467',
+    short: 'Кабина и открытая грузовая платформа',
+    desc: 'Пикап — кузов с закрытой кабиной и открытым грузовым кузовом-платформой сзади.\n\nПлюсы: грузоподъёмность, прочная рама, возможность буксировки прицепа.\nМинусы: габариты, жёсткая подвеска без нагрузки, груз открыт погоде (решается кунгом или крышкой).\n\nПримеры: Toyota Hilux, Ford Ranger, Mitsubishi L200, Volkswagen Amarok.' }
+];
+
+async function init() {
+  if (!localStorage.getItem(K.initialized)) {
+    setCats(['Легковые', 'Внедорожники', 'Грузовые']);
+    const forms = SEED.map((s, i) => ({
+      id: i + 1,
+      title: s.title,
+      category: s.category,
+      short_description: s.short,
+      description: s.desc,
+      main_image: ph(s.title, s.color, s.kind),
+      images: [ph(s.title + ' — вид 1', s.color, s.kind), ph(s.title + ' — вид 2', s.color)],
+      views: Math.floor(Math.random() * 40) + 3,
+      created_at: now(),
+      updated_at: now()
+    }));
+    setForms(forms);
+    localStorage.setItem(K.nextId, forms.length + 1);
+    const adminHash = await hashPassword(ADMIN_DEFAULT.password);
+    localStorage.setItem(K.admin, JSON.stringify({ login: ADMIN_DEFAULT.login, hash: adminHash }));
+    localStorage.setItem(K.initialized, '1');
+  }
+  route();
+}
+
+/* ============================================================
+   Тема (тёмная / светлая)
+   ============================================================ */
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  const b = document.getElementById('themeBtn');
+  if (b) b.textContent = t === 'dark' ? '☀️' : '🌙';
+}
+(function initTheme() {
+  let t = null;
+  try { t = localStorage.getItem(K.theme); } catch (e) {}
+  if (!t) t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  applyTheme(t);
+})();
+document.getElementById('themeBtn').addEventListener('click', () => {
+  const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem(K.theme, t); } catch (e) {}
+  applyTheme(t);
+});
+
+/* ============================================================
+   Шаг 7. Роутер на hash
+   ============================================================ */
+function route() {
+  const hash = location.hash.slice(1) || '/';
+  const parts = hash.split('/').filter(Boolean);
+
+  document.querySelectorAll('.site-header nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById(parts[0] === 'admin' ? 'nav-admin' : 'nav-home').classList.add('active');
+  window.scrollTo(0, 0);
+
+  if (parts[0] === 'form' && parts[1]) { renderForm(+parts[1]); return; }
+
+  if (parts[0] === 'admin') {
+    if (parts[1] === 'login') { renderAdminLogin(); return; }
+    if (parts[1] === 'logout') {
+      sessionStorage.removeItem(K.admin);
+      toast('Вы вышли', 'success');
+      location.hash = '#/'; return;
+    }
+    if (!requireAuth()) return;
+    if (parts[1] === 'forms') { renderAdminForms(); return; }
+    if (parts[1] === 'categories') { renderAdminCategories(); return; }
+    if (parts[1] === 'form' && parts[2] === 'add') { renderAdminForm(null); return; }
+    if (parts[1] === 'form' && parts[2] === 'edit') { renderAdminForm(+parts[3]); return; }
+    renderAdminDashboard(); return;
+  }
+  renderHome();
+}
+window.addEventListener('hashchange', route);
+document.addEventListener('DOMContentLoaded', init);
+
+/* ============================================================
+   Шаг 8. Каталог
+   ============================================================ */
+let state = { q: '', cat: '', sort: 'new', page: 1 };
+
+function renderHome() {
+  state = { q: '', cat: '', sort: 'new', page: 1 };
+  const forms = getForms();
+  const totalViews = forms.reduce((s, f) => s + (f.views || 0), 0);
+  app.innerHTML = `
+    <section class="hero">
+      <h1>Справочник форм автомобилей</h1>
+      <p>Типы кузова: описание, плюсы и минусы, примеры моделей и фотографии.</p>
+      <div class="hero-stats">
+        <span>🚘 ${forms.length} форм</span>
+        <span>🗂 ${getCats().length} категорий</span>
+        <span>👁 ${totalViews} просмотров</span>
+      </div>
+    </section>
+    <div class="toolbar">
+      <input type="search" id="q" placeholder="🔍 Поиск по названию…" autocomplete="off">
+      <select id="catSel" aria-label="Категория"></select>
+      <select id="sortSel" aria-label="Сортировка">
+        <option value="new">Сначала новые</option>
+        <option value="views">По просмотрам</option>
+        <option value="title">По названию</option>
+      </select>
+    </div>
+    <div id="results"></div>`;
+
+  document.getElementById('catSel').innerHTML =
+    `<option value="">Все категории</option>` +
+    getCats().map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+
+  document.getElementById('q').addEventListener('input', e => { state.q = e.target.value; state.page = 1; renderHomeList(); });
+  document.getElementById('catSel').addEventListener('change', e => { state.cat = e.target.value; state.page = 1; renderHomeList(); });
+  document.getElementById('sortSel').addEventListener('change', e => { state.sort = e.target.value; state.page = 1; renderHomeList(); });
+  document.getElementById('results').addEventListener('click', e => {
+    const btn = e.target.closest('[data-page]');
+    if (!btn || btn.disabled) return;
+    state.page = +btn.dataset.page;
+    renderHomeList();
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  renderHomeList();
+}
+
+function renderHomeList() {
+  const q = state.q.trim().toLowerCase();
+  const cat = state.cat;
+  const sorters = {
+    new: (a, b) => b.id - a.id,
+    views: (a, b) => (b.views || 0) - (a.views || 0),
+    title: (a, b) => (a.title || '').localeCompare(b.title || '', 'ru')
+  };
+  const filtered = getForms().filter(f => {
+    const matchQ = !q || (f.title || '').toLowerCase().includes(q);
+    const matchC = !cat || f.category === cat;
+    return matchQ && matchC;
+  }).sort(sorters[state.sort] || sorters.new);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  if (state.page > totalPages) state.page = totalPages;
+  const start = (state.page - 1) * PER_PAGE;
+  const pageItems = filtered.slice(start, start + PER_PAGE);
+
+  const results = document.getElementById('results');
+  if (!pageItems.length) {
+    results.innerHTML = `<div class="empty"><h2>Ничего не найдено</h2><p>Попробуйте изменить запрос или категорию.</p></div>`;
+    return;
+  }
+  let html = `<p class="result-info">Найдено: ${filtered.length}</p><div class="grid">`;
+  for (const f of pageItems) {
+    html += `
+      <a class="card" href="#/form/${f.id}">
+        <div class="card-img"><img loading="lazy" src="${safeSrc(f.main_image) || ph('Нет фото')}" alt="${esc(f.title)}"></div>
+        <div class="card-body">
+          <span class="tag">${esc(f.category)}</span>
+          <h3>${esc(f.title)}</h3>
+          <p>${esc(f.short_description || '')}</p>
+          <div class="card-foot">
+            <span>👁 ${f.views || 0} просмотров</span>
+            <span class="more">Подробнее →</span>
+          </div>
+        </div>
+      </a>`;
+  }
+  html += '</div>' + paginationHtml(totalPages, state.page);
+  results.innerHTML = html;
+}
+
+function paginationHtml(total, current) {
+  if (total <= 1) return '';
+  let html = '<div class="pagination">';
+  html += `<button class="pg" data-page="${current - 1}" ${current === 1 ? 'disabled' : ''} aria-label="Назад">←</button>`;
+  let last = 0;
+  for (let i = 1; i <= total; i++) {
+    if (i === 1 || i === total || Math.abs(i - current) <= 2) {
+      if (i - last > 1) html += '<span class="pg-dots">…</span>';
+      html += `<button class="pg ${i === current ? 'active' : ''}" data-page="${i}">${i}</button>`;
+      last = i;
+    }
+  }
+  html += `<button class="pg" data-page="${current + 1}" ${current === total ? 'disabled' : ''} aria-label="Вперёд">→</button>`;
+  return html + '</div>';
+}
+
+/* ============================================================
+   Шаг 9. Страница просмотра
+   ============================================================ */
+function renderForm(id) {
+  const forms = getForms();
+  const idx = forms.findIndex(f => f.id === id);
+  if (idx === -1) {
+    app.innerHTML = `<div class="empty"><h2>Запись не найдена</h2>
+      <p style="margin-top:12px"><a href="#/" class="btn">← Вернуться в каталог</a></p></div>`;
+    return;
+  }
+  forms[idx].views = (forms[idx].views || 0) + 1;
+  try { setForms(forms); } catch (e) {}
+  const f = forms[idx];
+  const images = [f.main_image, ...(f.images || [])].map(safeSrc).filter(Boolean);
+  const mainSrc = images[0] || ph('Нет фото');
+
+  app.innerHTML = `
+    <a href="#/" class="back-link">← Назад к каталогу</a>
+    <div class="form-view-grid">
+      <div class="gallery">
+        <img id="mainImg" class="main-img" src="${mainSrc}" alt="${esc(f.title)}">
+        <div class="thumbs">
+          ${images.map((src, i) => `
+            <button class="thumb ${i === 0 ? 'active' : ''}" data-src="${src}" type="button" aria-label="Фото ${i + 1}">
+              <img src="${src}" alt="">
+            </button>`).join('')}
+        </div>
+      </div>
+      <div class="form-info">
+        <span class="tag">${esc(f.category)}</span>
+        <h1>${esc(f.title)}</h1>
+        <p class="lead">${esc(f.short_description || '')}</p>
+        <div class="form-stats">
+          <span>👁 ${f.views} просмотров</span>
+          <span>📅 ${esc(f.created_at)}</span>
+        </div>
+        <div class="desc">${esc(f.description || 'Описание пока не добавлено.')}</div>
+      </div>
+    </div>`;
+
+  const thumbs = document.querySelectorAll('.thumb');
+  thumbs.forEach(t => t.addEventListener('click', () => {
+    document.getElementById('mainImg').src = t.dataset.src;
+    thumbs.forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+  }));
+}
+
+/* ============================================================
+   Шаг 10. Авторизация
+   ============================================================ */
+function renderAdminLogin() {
+  if (isAuthed()) { location.hash = '#/admin'; return; }
+  app.innerHTML = `
+    <div class="auth-wrap">
+      <form class="auth-card" id="loginForm" novalidate>
+        <div class="lock">🔐</div>
+        <h2>Вход в админ-панель</h2>
+        <p class="hint">По умолчанию: <b>admin</b> / <b>admin123</b></p>
+        <div class="field"><label for="lg">Логин</label><input id="lg" name="login" required autofocus autocomplete="username"></div>
+        <div class="field"><label for="pw">Пароль</label><input id="pw" name="password" type="password" required autocomplete="current-password"></div>
+        <button class="btn primary" type="submit">Войти</button>
+        <p class="err" id="err"></p>
+      </form>
+    </div>`;
+
+  document.getElementById('loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const login = (fd.get('login') || '').toString().trim();
+    const password = (fd.get('password') || '').toString();
+    const err = document.getElementById('err');
+    err.textContent = '';
+    let admin = null;
+    try { admin = JSON.parse(localStorage.getItem(K.admin) || 'null'); } catch (x) {}
+    if (!admin) { err.textContent = 'Администратор не настроен.'; return; }
+    const hash = await hashPassword(password);
+    if (login === admin.login && hash === admin.hash) {
+      sessionStorage.setItem(K.admin, '1');
+      toast('Добро пожаловать!', 'success');
+      location.hash = '#/admin';
+    } else {
+      err.textContent = 'Неверный логин или пароль';
+    }
+  });
+}
+
+/* ============================================================
+   Шаг 11. Дашборд
+   ============================================================ */
+function adminShell(content, active) {
+  const items = [
+    ['#/admin', '📊 Дашборд', 'dash'],
+    ['#/admin/forms', '🚘 Записи', 'forms'],
+    ['#/admin/categories', '🗂 Категории', 'cats']
+  ];
+  return `
+    <div class="admin-layout">
+      <aside class="admin-nav">
+        ${items.map(([href, label, key]) => `<a href="${href}" class="${active === key ? 'active' : ''}">${label}</a>`).join('')}
+        <a href="#/admin/logout" class="logout">⎋ Выйти</a>
+      </aside>
+      <div class="admin-content">${content}</div>
+    </div>`;
+}
+
+function formsTable(list, withActions) {
+  return `
+    <div class="table-wrap"><table>
+      <thead><tr><th>Фото</th><th>Название</th><th>Категория</th><th>Просмотры</th><th>Дата</th>${withActions ? '<th>Действия</th>' : ''}</tr></thead>
+      <tbody>
+        ${list.map(f => `
+          <tr>
+            <td><img class="mini" src="${safeSrc(f.main_image) || ph('—')}" alt=""></td>
+            <td><b>${esc(f.title)}</b></td>
+            <td><span class="tag">${esc(f.category)}</span></td>
+            <td>${f.views || 0}</td>
+            <td>${esc(f.created_at)}</td>
+            ${withActions ? `<td class="act">
+              <a href="#/form/${f.id}" class="btn sm" title="Открыть">👁</a>
+              <a href="#/admin/form/edit/${f.id}" class="btn sm" title="Изменить">✎</a>
+              <button class="btn sm danger" data-del="${f.id}" title="Удалить" type="button">🗑</button>
+            </td>` : ''}
+          </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+}
+
+function renderAdminDashboard() {
+  const forms = getForms();
+  const cats = getCats();
+  const totalViews = forms.reduce((s, f) => s + (f.views || 0), 0);
+  const last = [...forms].sort((a, b) => b.id - a.id).slice(0, 5);
+  const top = [...forms].sort((a, b) => (b.views || 0) - (a.views || 0))[0];
+
+  const content = `
+    <h1>Дашборд</h1>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="k">Всего форм</div><div class="v">${forms.length}</div></div>
+      <div class="stat-card"><div class="k">Всего просмотров</div><div class="v">${totalViews}</div></div>
+      <div class="stat-card"><div class="k">Категорий</div><div class="v">${cats.length}</div></div>
+      <div class="stat-card"><div class="k">Самая популярная</div><div class="v" style="font-size:20px;padding-top:9px">${top ? esc(top.title) : '—'}</div></div>
+    </div>
+    <h2>Последние добавленные</h2>
+    ${last.length ? formsTable(last, false) : '<div class="empty">Записей пока нет</div>'}
+    <div class="actions">
+      <a href="#/admin/form/add" class="btn primary">+ Добавить запись</a>
+      <button class="btn" id="exportBtn" type="button">⬇ Экспорт JSON</button>
+      <label class="btn" style="cursor:pointer">⬆ Импорт JSON<input type="file" id="importFile" accept="application/json,.json" hidden></label>
+      <button class="btn danger" id="resetBtn" type="button">Сбросить демо-данные</button>
+    </div>`;
+  app.innerHTML = adminShell(content, 'dash');
+
+  document.getElementById('resetBtn').addEventListener('click', async () => {
+    if (!confirm('Сбросить все данные и вернуть демо-записи?')) return;
+    [K.forms, K.cats, K.nextId, K.admin, K.initialized].forEach(key => localStorage.removeItem(key));
+    sessionStorage.removeItem(K.admin);
+    await init();
+    toast('Демо-данные восстановлены', 'success');
+    location.hash = '#/';
+  });
+
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const data = { version: 1, exported: new Date().toISOString(), categories: getCats(), forms: getForms() };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'car-forms-backup.json';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    toast('Резервная копия скачана', 'success');
+  });
+
+  document.getElementById('importFile').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if (!Array.isArray(data.forms) || !Array.isArray(data.categories)) throw new Error('format');
+      if (!confirm('Заменить текущие данные данными из файла?')) { e.target.value = ''; return; }
+      const forms = data.forms.filter(f => f && typeof f === 'object' && Number.isFinite(+f.id)).map(f => ({ ...f, id: +f.id }));
+      setCats(data.categories.map(String));
+      setForms(forms);
+      localStorage.setItem(K.nextId, Math.max(0, ...forms.map(f => f.id)) + 1);
+      toast('Данные импортированы', 'success');
+      renderAdminDashboard();
+    } catch (err) {
+      toast('Не удалось прочитать файл: неверный формат', 'error');
+    }
+    e.target.value = '';
+  });
+}
+
+/* ============================================================
+   Шаг 12. Список записей и удаление
+   ============================================================ */
+function renderAdminForms() {
+  const forms = [...getForms()].sort((a, b) => b.id - a.id);
+  const content = `
+    <div class="row-head"><h1>Записи (${forms.length})</h1><a href="#/admin/form/add" class="btn primary">+ Добавить</a></div>
+    ${forms.length ? formsTable(forms, true) : '<div class="empty"><h2>Записей нет</h2><p>Добавьте первую форму кузова.</p></div>'}`;
+  app.innerHTML = adminShell(content, 'forms');
+
+  app.querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', () => {
+    const id = +btn.dataset.del;
+    const f = getForms().find(x => x.id === id);
+    if (!f) return;
+    if (!confirm(`Удалить запись «${f.title}»?`)) return;
+    setForms(getForms().filter(x => x.id !== id));
+    toast('Запись удалена', 'success');
+    renderAdminForms();
+  }));
+}
+
+/* ============================================================
+   Шаг 13. Форма добавления и редактирования
+   ============================================================ */
+function renderAdminForm(id) {
+  const isEdit = id != null;
+  const existing = isEdit ? getForms().find(f => f.id === id) : null;
+  if (isEdit && !existing) {
+    app.innerHTML = adminShell('<div class="empty"><h2>Запись не найдена</h2></div>', 'forms');
+    return;
+  }
+  const cats = getCats();
+  if (!cats.length) {
+    app.innerHTML = adminShell(`<div class="empty"><h2>Нет категорий</h2>
+      <p>Сначала создайте хотя бы одну категорию.</p>
+      <p style="margin-top:12px"><a class="btn primary" href="#/admin/categories">Перейти к категориям</a></p></div>`, 'forms');
+    return;
+  }
+
+  let mainImage = existing ? existing.main_image : null;
+  let gallery = existing ? [...(existing.images || [])] : [];
+
+  const content = `
+    <h1>${isEdit ? 'Редактирование' : 'Новая запись'}</h1>
+    <form class="form-grid" id="form" novalidate>
+      <div class="field">
+        <label for="f-title">Название *</label>
+        <input id="f-title" name="title" maxlength="80" value="${existing ? esc(existing.title) : ''}">
+        <span class="msg" id="title-msg"></span>
+      </div>
+      <div class="field">
+        <label for="f-cat">Категория *</label>
+        <select id="f-cat" name="category">
+          ${cats.map(c => `<option value="${esc(c)}" ${existing && existing.category === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <label for="f-short">Краткое описание</label>
+        <textarea id="f-short" name="short_description" maxlength="160">${existing ? esc(existing.short_description || '') : ''}</textarea>
+      </div>
+      <div class="field">
+        <label for="f-desc">Полное описание</label>
+        <textarea id="f-desc" name="description" rows="7">${existing ? esc(existing.description || '') : ''}</textarea>
+      </div>
+      <div class="field">
+        <label>Главное изображение</label>
+        <input type="file" name="mainFile" accept="image/jpeg,image/png,image/webp">
+        <small>JPG, PNG или WEBP, до 500 КБ</small>
+        <div id="mainPreview"></div>
+      </div>
+      <div class="field">
+        <label>Галерея</label>
+        <input type="file" name="galleryFiles" accept="image/jpeg,image/png,image/webp" multiple>
+        <div class="previews" id="galleryPreview"></div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn primary">${isEdit ? 'Сохранить' : 'Добавить'}</button>
+        <a href="#/admin/forms" class="btn">Отмена</a>
+      </div>
+    </form>`;
+  app.innerHTML = adminShell(content, 'forms');
+
+  const mainPreview = document.getElementById('mainPreview');
+  const galleryPreview = document.getElementById('galleryPreview');
+
+  function renderMainPreview() {
+    const src = safeSrc(mainImage);
+    mainPreview.innerHTML = src
+      ? `<div class="img-prev"><img src="${src}" alt=""><button type="button" class="x" data-rm-main aria-label="Удалить">×</button></div>`
+      : '<p class="hint">Не выбрано</p>';
+    const rm = mainPreview.querySelector('[data-rm-main]');
+    if (rm) rm.onclick = () => { mainImage = null; renderMainPreview(); };
+  }
+  function renderGalleryPreview() {
+    galleryPreview.innerHTML = gallery.map((src, i) =>
+      `<div class="img-prev"><img src="${safeSrc(src)}" alt=""><button type="button" class="x" data-rm-g="${i}" aria-label="Удалить">×</button></div>`).join('');
+    galleryPreview.querySelectorAll('[data-rm-g]').forEach(btn => {
+      btn.onclick = () => { gallery.splice(+btn.dataset.rmG, 1); renderGalleryPreview(); };
+    });
+  }
+  renderMainPreview();
+  renderGalleryPreview();
+
+  document.querySelector('[name="mainFile"]').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const err = validateImage(file);
+    if (err) { toast(err, 'error'); e.target.value = ''; return; }
+    mainImage = await readFileAsDataURL(file);
+    renderMainPreview();
+  });
+  document.querySelector('[name="galleryFiles"]').addEventListener('change', async e => {
+    for (const file of [...e.target.files]) {
+      const err = validateImage(file);
+      if (err) { toast(`${file.name}: ${err}`, 'error'); continue; }
+      gallery.push(await readFileAsDataURL(file));
+    }
+    e.target.value = '';
+    renderGalleryPreview();
+  });
+
+  const titleInput = document.getElementById('f-title');
+  titleInput.addEventListener('input', () => {
+    titleInput.classList.remove('invalid');
+    document.getElementById('title-msg').textContent = '';
+  });
+
+  document.getElementById('form').addEventListener('submit', e => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const data = {
+      title: fd.get('title').toString().trim(),
+      category: fd.get('category').toString(),
+      short_description: fd.get('short_description').toString().trim(),
+      description: fd.get('description').toString().trim()
+    };
+    if (!data.title) {
+      titleInput.classList.add('invalid');
+      document.getElementById('title-msg').textContent = 'Введите название';
+      titleInput.focus();
+      toast('Введите название', 'error');
+      return;
+    }
+    const forms = getForms();
+    if (isEdit) {
+      const i = forms.findIndex(f => f.id === id);
+      forms[i] = { ...forms[i], ...data, main_image: mainImage, images: gallery, updated_at: now() };
+    } else {
+      forms.push({ id: nextId(), ...data, main_image: mainImage, images: gallery, views: 0, created_at: now(), updated_at: now() });
+    }
+    try { setForms(forms); } catch (err) { return; }
+    toast(isEdit ? 'Сохранено' : 'Добавлено', 'success');
+    location.hash = '#/admin/forms';
+  });
+}
+
+/* ============================================================
+   Шаг 14. Категории
+   ============================================================ */
+function renderAdminCategories() {
+  const cats = getCats();
+  const forms = getForms();
+  const content = `
+    <h1>Категории (${cats.length})</h1>
+    <form class="cat-add" id="addCat">
+      <input name="name" placeholder="Название новой категории" maxlength="40" required>
+      <button class="btn primary" type="submit">+ Добавить</button>
+    </form>
+    ${cats.length ? `
+    <div class="table-wrap"><table>
+      <thead><tr><th>Категория</th><th>Записей</th><th>Действия</th></tr></thead>
+      <tbody>
+        ${cats.map(c => `
+          <tr>
+            <td><b>${esc(c)}</b></td>
+            <td>${forms.filter(f => f.category === c).length}</td>
+            <td class="act">
+              <button class="btn sm" type="button" data-rename="${esc(c)}">✎ Переименовать</button>
+              <button class="btn sm danger" type="button" data-rmcat="${esc(c)}">🗑 Удалить</button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table></div>` : '<div class="empty"><h2>Категорий нет</h2></div>'}`;
+  app.innerHTML = adminShell(content, 'cats');
+
+  document.getElementById('addCat').addEventListener('submit', e => {
+    e.preventDefault();
+    const name = e.target.querySelector('[name="name"]').value.trim();
+    if (!name) return;
+    const list = getCats();
+    if (list.includes(name)) { toast('Такая категория уже есть', 'error'); return; }
+    list.push(name);
+    setCats(list);
+    toast('Категория добавлена', 'success');
+    renderAdminCategories();
+  });
+
+  app.querySelectorAll('[data-rename]').forEach(btn => btn.addEventListener('click', () => {
+    const oldName = btn.dataset.rename;
+    const newName = prompt('Новое название:', oldName);
+    if (!newName || newName.trim() === oldName) return;
+    const trimmed = newName.trim();
+    if (getCats().includes(trimmed)) { toast('Такая категория уже есть', 'error'); return; }
+    setCats(getCats().map(c => c === oldName ? trimmed : c));
+    setForms(getForms().map(f => f.category === oldName ? { ...f, category: trimmed } : f));
+    toast('Переименовано', 'success');
+    renderAdminCategories();
+  }));
+
+  app.querySelectorAll('[data-rmcat]').forEach(btn => btn.addEventListener('click', () => {
+    const name = btn.dataset.rmcat;
+    const count = getForms().filter(f => f.category === name).length;
+    if (count > 0) { toast(`Нельзя удалить: в категории ${count} записей`, 'error'); return; }
+    if (!confirm(`Удалить «${name}»?`)) return;
+    setCats(getCats().filter(c => c !== name));
+    toast('Категория удалена', 'success');
+    renderAdminCategories();
+  }));
+}
+</script>
+</body>
+</html>
